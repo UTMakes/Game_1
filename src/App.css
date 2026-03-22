@@ -603,6 +603,243 @@
   color: var(--factory-primary);
 }
 
+/* ─── Audio Toggle Button (in HUD) ─── */
+.audio-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  transition:
+    background var(--duration-fast),
+    border-color var(--duration-fast),
+    color var(--duration-fast);
+}
+
+.audio-toggle-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.audio-toggle-btn.muted {
+  border-color: var(--status-danger);
+  color: var(--status-danger);
+}
+
+.audio-toggle-btn.open {
+  border-color: var(--network-primary);
+  color: var(--network-primary);
+}
+
+/* ─── Audio Controls Panel ─── */
+.audio-controls-panel {
+  position: fixed;
+  top: 48px;
+  right: 0;
+  bottom: 56px;
+  width: 260px;
+  z-index: 25;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid var(--border-subtle);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  overflow-y: auto;
+}
+
+.audio-controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.audio-controls-title {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-highlight);
+}
+
+.audio-controls-close {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 14px;
+  transition: color var(--duration-fast);
+}
+
+.audio-controls-close:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.audio-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.audio-section-label {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+}
+
+.audio-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: var(--space-xs) 0;
+}
+
+/* ─── Volume Slider Row ─── */
+.audio-slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 4px 0;
+}
+
+.audio-slider-icon {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.audio-slider-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  width: 56px;
+  flex-shrink: 0;
+}
+
+.audio-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-void);
+  outline: none;
+  cursor: pointer;
+}
+
+.audio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--network-primary);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 6px var(--network-glow);
+  cursor: pointer;
+  transition: box-shadow var(--duration-fast);
+}
+
+.audio-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 12px var(--network-glow);
+}
+
+.audio-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--network-primary);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 6px var(--network-glow);
+  cursor: pointer;
+}
+
+.audio-slider-value {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Audio Action Buttons ─── */
+.audio-mute-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  transition:
+    background var(--duration-fast),
+    border-color var(--duration-fast),
+    color var(--duration-fast);
+}
+
+.audio-mute-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.audio-mute-btn.muted {
+  border-color: var(--status-danger);
+  color: var(--status-danger);
+}
+
+.audio-test-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--bg-panel);
+  border: 1px solid var(--network-primary);
+  border-radius: var(--radius-md);
+  color: var(--network-primary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition:
+    background var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+.audio-test-btn:hover {
+  background: var(--bg-elevated);
+  box-shadow: 0 0 12px var(--network-glow);
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
   .hud {

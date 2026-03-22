@@ -2,6 +2,8 @@
 import useGameStore from '../store/gameStore';
 import useFactoryStore from '../store/factoryStore';
 import useNetworkStore from '../store/networkStore';
+import useAudioStore from '../store/audioStore';
+import soundEngine from '../audio/SoundEngine';
 
 export default function Toolbar() {
   const activeLayer = useGameStore((s) => s.activeLayer);
@@ -15,17 +17,29 @@ export default function Toolbar() {
   const selectedNodeType = useNetworkStore((s) => s.selectedNodeType);
   const setSelectedNodeType = useNetworkStore((s) => s.setSelectedNodeType);
 
+  const audioReady = useAudioStore((s) => s.audioReady);
+
   const isFactory = activeLayer === 'factory';
   const tools = isFactory ? factoryTools : networkTools;
   const selected = isFactory ? selectedTool : selectedNodeType;
   const setSelected = isFactory ? setSelectedTool : setSelectedNodeType;
+
+  const handleToggleLayer = () => {
+    if (audioReady) soundEngine.play('uiClick');
+    toggleLayer();
+  };
+
+  const handleSelectTool = (id) => {
+    if (audioReady && id !== selected) soundEngine.play('uiClick');
+    setSelected(id);
+  };
 
   return (
     <div className="toolbar" id="toolbar-bar">
       {/* Layer Toggle */}
       <button
         className={`layer-toggle-btn ${isFactory ? 'factory-active' : 'network-active'}`}
-        onClick={toggleLayer}
+        onClick={handleToggleLayer}
         id="layer-toggle"
         title={`Switch to ${isFactory ? 'Network' : 'Factory'} layer`}
       >
@@ -43,7 +57,7 @@ export default function Toolbar() {
           <button
             key={tool.id}
             className={`tool-btn ${selected === tool.id ? 'active' : ''} ${!isFactory ? 'network-tool' : ''}`}
-            onClick={() => setSelected(tool.id)}
+            onClick={() => handleSelectTool(tool.id)}
             id={`tool-${tool.id}`}
             title={tool.label}
           >

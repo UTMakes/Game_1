@@ -1,6 +1,8 @@
 // MarketPanel.jsx — Live commodity price display (slide-in side panel)
 import { motion, AnimatePresence } from 'framer-motion';
 import useGameStore from '../store/gameStore';
+import useAudioStore from '../store/audioStore';
+import soundEngine from '../audio/SoundEngine';
 
 const TREND_SYMBOLS = {
   up: '▲',
@@ -12,6 +14,12 @@ export default function MarketPanel() {
   const marketPrices = useGameStore((s) => s.marketPrices);
   const marketOpen = useGameStore((s) => s.marketOpen);
   const setMarketOpen = useGameStore((s) => s.setMarketOpen);
+  const audioReady = useAudioStore((s) => s.audioReady);
+
+  const handleClose = () => {
+    if (audioReady) soundEngine.play('uiClick');
+    setMarketOpen(false);
+  };
 
   return (
     <div className="market-panel-wrapper">
@@ -29,7 +37,7 @@ export default function MarketPanel() {
               <span className="market-panel-title">📈 Commodity Market</span>
               <button
                 className="market-close-btn"
-                onClick={() => setMarketOpen(false)}
+                onClick={handleClose}
                 id="market-close"
                 title="Close market panel"
               >

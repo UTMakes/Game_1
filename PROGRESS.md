@@ -1,5 +1,42 @@
 # GRIDFLOW — Development Progress
 
+## 2026-03-21 — Game Loop Foundations (v0.2.0)
+
+### ✅ Completed
+
+#### Core Simulation Engine (Web Worker)
+- **`src/layers/factory/TickEngine.worker.js`** — Main simulation loop running off-thread via Comlink.
+  - Handles packet spawning based on `source` cooldowns.
+  - Moves packets directionally along `conveyor` tiles.
+  - Processes `machine` queues (absorbing incoming packets, advancing timers, outputting results).
+  - Routes finished products to `output` tiles to earn credits.
+  - Detects `jam` conditions when packets are stuck > 5 ticks.
+- **`src/layers/factory/GridEngine.js`** — 2D uniform grid logic.
+  - Handles tile placement checking and cost validation.
+  - Tile rotation and array-index coordination.
+  - Exposes `exportState()` for transferring the static map layout to the Web Worker.
+
+#### Configuration & Data Structures
+- **`src/config/GameConfig.js`** — Centralized simulation tunables (grid sizing, tick rate base 200ms, tile placement costs, machine tier stats, jam thresholds).
+- **`src/config/Recipes.js`** — Defined 3 major resource crafting chains (Metals, Energy, Bio-Tech) dictating what materials turn into what.
+- **`src/layers/factory/tiles/TileTypes.js`** — Data-driven registry defining properties for the 7 physical tile types (source, conveyor, machine, output, splitter, merger, heatsink).
+
+#### Store state and Bridge Wiring
+- **`src/store/factoryStore.js`** — Wraps `GridEngine` singleton and syncs high-frequency tick data (packets, jams, heat) back from the Worker.
+- **`src/store/gameStore.js`** — Expanded with running state, speed multiplier, tick ingestion, and a `fluctuateMarket` action simulating price drift.
+- **`src/bridge/EventBus.js`** — Expanded with strongly typed event constants and `once()` support.
+- **`src/bridge/BridgeController.js`** — Listens to `PACKET_SOLD` events from the factory simulation to add real credits, and intercepts `JAM_DETECTED` events for the network layer.
+
+#### UI Integration
+- **`src/hooks/useGameLoop.js`** — The React bridge hook. Initiates the Worker, runs a controlled `requestAnimationFrame` loop synced to the game speed, invokes the worker's `tick()`, and dispatches EventBus emissions.
+- **`src/components/HUD.jsx`** — Added playback controls (`PLAY/PAUSE`) and speed controls (`1x, 2x, 4x`) to the top right of the HUD.
+- **`src/App.jsx`** — Replaced the placeholder 1-second interval with the real simulation hook.
+
+#### Audio UI Integration
+- **Audio Hooks** — Added `uiClick` sound triggers to all interactive elements across `Toolbar.jsx` (layer toggle, tool buttons), `HUD.jsx` (mute, audio panel toggle, market toggle, play/pause, speed controls), and `MarketPanel.jsx` (close button).
+
+---
+
 ## 2026-03-21 — Basic Visual Interface (v0.1.0)
 
 ### ✅ Completed
@@ -55,10 +92,9 @@
 ---
 
 ### 🔮 Next Steps
-- Implement the Pixi.js factory grid with interactive tile placement
+- Implement the Pixi.js factory grid rendering to see the simulation visually
+- Wiring actual UI interaction (clicks) into the `placeTile` actions
 - Integrate ReactFlow for the network node canvas
-- Build the simulation tick engine (Web Worker)
-- Wire real game logic to stores
-- Add sound effects
+- Connect sound effects to Events
 - Implement the upgrade shop
 - Campaign level loading

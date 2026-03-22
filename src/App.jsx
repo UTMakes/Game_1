@@ -1,27 +1,57 @@
 // App.jsx — GRIDFLOW main game shell
-// Layout: HUD (top) → Layers (center) → Toolbar (bottom) + Market Panel (side)
-import { useEffect, useCallback } from 'react';
+// Layout: HUD (top) → Layers (center) → Toolbar (bottom) + Side Panels
+import { useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import './App.css';
 
 import HUD from './components/HUD';
 import Toolbar from './components/Toolbar';
 import MarketPanel from './components/MarketPanel';
+import AudioControls from './components/AudioControls';
 import FactoryFloor from './components/FactoryFloor';
 import NetworkCanvas from './components/NetworkCanvas';
 import useGameStore from './store/gameStore';
+import useAudioStore from './store/audioStore';
+import soundEngine from './audio/SoundEngine';
+import { useGameLoop } from './hooks/useGameLoop';
 
 function App() {
   const activeLayer = useGameStore((s) => s.activeLayer);
   const incrementTick = useGameStore((s) => s.incrementTick);
+  const initAudio = useAudioStore((s) => s.initAudio);
+  const audioReady = useAudioStore((s) => s.audioReady);
+  const audioInitRef = useRef(false);
 
-  // Tick counter — increments every second (will be replaced by simulation tick later)
+  // ── Initialize audio on first user interaction (browser autoplay policy) ──
   useEffect(() => {
-    const interval = setInterval(() => {
-      incrementTick();
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [incrementTick]);
+    const handleFirstInteraction = () => {
+      if (!audioInitRef.current) {
+        audioInitRef.current = true;
+        initAudio();
+        // Start the ambient drone after a short delay
+        setTimeout(() => {
+          soundEngine.startLoop('ambientDrone', { stressLevel: 0 });
+        }, 300);
+      }
+    };
+
+    window.addEventListener('click', handleFirstInteraction, { once: true });
+    window.addEventListener('keydown', handleFirstInteraction, { once: true });
+    return () => {
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, [initAudio]);
+
+  // ── Cleanup loops on unmount ──
+  useEffect(() => {
+    return () => {
+      soundEngine.stopAllLoops();
+    };
+  }, []);
+
+  // Initialize Game Loop Web Worker Action
+  useGameLoop();
 
   // Keyboard shortcut: Tab to toggle layers
   const toggleLayer = useGameStore((s) => s.toggleLayer);
@@ -29,8 +59,10 @@ function App() {
     if (e.key === 'Tab') {
       e.preventDefault();
       toggleLayer();
+      // Play UI click on layer switch
+      if (audioReady) soundEngine.play('uiClick');
     }
-  }, [toggleLayer]);
+  }, [toggleLayer, audioReady]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -93,8 +125,9 @@ function App() {
       {/* ─── Toolbar (Bottom Bar) ─── */}
       <Toolbar />
 
-      {/* ─── Market Panel (Side Slide-in) ─── */}
+      {/* ─── Side Panels ─── */}
       <MarketPanel />
+      <AudioControls />
     </div>
   );
 }
