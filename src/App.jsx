@@ -1,121 +1,102 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// App.jsx — GRIDFLOW main game shell
+// Layout: HUD (top) → Layers (center) → Toolbar (bottom) + Market Panel (side)
+import { useEffect, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import './App.css';
+
+import HUD from './components/HUD';
+import Toolbar from './components/Toolbar';
+import MarketPanel from './components/MarketPanel';
+import FactoryFloor from './components/FactoryFloor';
+import NetworkCanvas from './components/NetworkCanvas';
+import useGameStore from './store/gameStore';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const activeLayer = useGameStore((s) => s.activeLayer);
+  const incrementTick = useGameStore((s) => s.incrementTick);
+
+  // Tick counter — increments every second (will be replaced by simulation tick later)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      incrementTick();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [incrementTick]);
+
+  // Keyboard shortcut: Tab to toggle layers
+  const toggleLayer = useGameStore((s) => s.toggleLayer);
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      toggleLayer();
+    }
+  }, [toggleLayer]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  const isWideScreen = typeof window !== 'undefined' && window.innerWidth > 1200;
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="game-shell" id="game-shell">
+      {/* ─── HUD (Top Bar) ─── */}
+      <HUD />
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      {/* ─── Layer Container ─── */}
+      {isWideScreen ? (
+        /* Split View on wide screens */
+        <div className="layer-container split-view" id="layer-container">
+          <div className="layer-panel factory-layer hex-grid-bg">
+            <span className="layer-label factory">⚡ Factory</span>
+            <FactoryFloor />
+          </div>
+          <div className="layer-panel network-layer dot-grid-bg">
+            <span className="layer-label network">◉ Network</span>
+            <NetworkCanvas />
+          </div>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+      ) : (
+        /* Tabbed View on narrow screens */
+        <div className="layer-container" id="layer-container">
+          <AnimatePresence mode="wait">
+            {activeLayer === 'factory' ? (
+              <motion.div
+                className="layer-panel factory-layer hex-grid-bg"
+                key="factory"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.25 }}
+              >
+                <span className="layer-label factory">⚡ Factory</span>
+                <FactoryFloor />
+              </motion.div>
+            ) : (
+              <motion.div
+                className="layer-panel network-layer dot-grid-bg"
+                key="network"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.25 }}
+              >
+                <span className="layer-label network">◉ Network</span>
+                <NetworkCanvas />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </section>
+      )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* ─── Toolbar (Bottom Bar) ─── */}
+      <Toolbar />
+
+      {/* ─── Market Panel (Side Slide-in) ─── */}
+      <MarketPanel />
+    </div>
+  );
 }
 
-export default App
+export default App;
