@@ -1,4 +1,5 @@
-// Toolbar.jsx — Tile/node picker, layer toggle
+// Toolbar.jsx — Floating frosted pill toolbar at bottom
+import { useEffect } from 'react';
 import useGameStore from '../store/gameStore';
 import useFactoryStore from '../store/factoryStore';
 import useNetworkStore from '../store/networkStore';
@@ -12,6 +13,8 @@ export default function Toolbar() {
   const factoryTools = useFactoryStore((s) => s.tools);
   const selectedTool = useFactoryStore((s) => s.selectedTool);
   const setSelectedTool = useFactoryStore((s) => s.setSelectedTool);
+  const selectedDirection = useFactoryStore((s) => s.selectedDirection);
+  const rotateSelectedDirection = useFactoryStore((s) => s.rotateSelectedDirection);
 
   const networkTools = useNetworkStore((s) => s.tools);
   const selectedNodeType = useNetworkStore((s) => s.selectedNodeType);
@@ -24,6 +27,20 @@ export default function Toolbar() {
   const selected = isFactory ? selectedTool : selectedNodeType;
   const setSelected = isFactory ? setSelectedTool : setSelectedNodeType;
 
+  // Global keydown listeners for toolbar actions
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'r' || e.key === 'R') {
+        if (isFactory) {
+          rotateSelectedDirection();
+          if (audioReady) soundEngine.play('uiClick');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFactory, rotateSelectedDirection, audioReady]);
+
   const handleToggleLayer = () => {
     if (audioReady) soundEngine.play('uiClick');
     toggleLayer();
@@ -34,38 +51,44 @@ export default function Toolbar() {
     setSelected(id);
   };
 
+  const dirArrow = { 'N': '↑', 'E': '→', 'S': '↓', 'W': '←' };
+
   return (
-    <div className="toolbar" id="toolbar-bar">
-      {/* Layer Toggle */}
-      <button
-        className={`layer-toggle-btn ${isFactory ? 'factory-active' : 'network-active'}`}
-        onClick={handleToggleLayer}
-        id="layer-toggle"
-        title={`Switch to ${isFactory ? 'Network' : 'Factory'} layer`}
-      >
-        <div className="toggle-indicator">
-          <div className={`toggle-dot ${isFactory ? '' : 'network'}`}></div>
-        </div>
-        <span>{isFactory ? 'FACTORY' : 'NETWORK'}</span>
+    <div className="floating-toolbar-dock glass-pill">
+      
+      {/* ─── Layer Toggle Pill ─── */}
+      <button className="toolbar-layer-toggle" onClick={handleToggleLayer}>
+        <span className={`toggle-mode ${isFactory ? 'active factory' : ''}`}>FACTORY</span>
+        <span style={{ margin: '0 4px', opacity: 0.3 }}>/</span>
+        <span className={`toggle-mode ${!isFactory ? 'active network' : ''}`}>NETWORK</span>
       </button>
 
       <div className="toolbar-divider"></div>
 
-      {/* Tool Buttons */}
-      <div className="toolbar-section" id="tool-picker">
+      {/* ─── Tool List ─── */}
+      <div className="tool-list">
         {tools.map((tool) => (
           <button
             key={tool.id}
-            className={`tool-btn ${selected === tool.id ? 'active' : ''} ${!isFactory ? 'network-tool' : ''}`}
+            className={`minimal-tool-btn ${selected === tool.id ? `active ${activeLayer}` : ''}`}
             onClick={() => handleSelectTool(tool.id)}
-            id={`tool-${tool.id}`}
             title={tool.label}
           >
-            <span className="tool-btn-icon">{tool.icon}</span>
-            <span className="tool-btn-label">{tool.label}</span>
+            {tool.icon}
           </button>
         ))}
       </div>
+
+      {/* ─── Rotation Indicator (Factory Only) ─── */}
+      {isFactory && (
+        <>
+          <div className="toolbar-divider"></div>
+          <div className="rotation-indicator" title="Press 'R' to rotate placement direction" style={{ padding: '0 12px', opacity: 0.7, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>DIR:</span>
+            <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{dirArrow[selectedDirection]}</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

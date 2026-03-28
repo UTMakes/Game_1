@@ -35,11 +35,21 @@
 #### Audio UI Integration
 - **Audio Hooks** — Added `uiClick` sound triggers to all interactive elements across `Toolbar.jsx` (layer toggle, tool buttons), `HUD.jsx` (mute, audio panel toggle, market toggle, play/pause, speed controls), and `MarketPanel.jsx` (close button).
 
+## 2026-03-28 — Minimal Overlapping Fullscreen Redesign (v0.1.1)
+
+### ✅ Completed
+- **Layout Overhaul**: Replaced the CSS Grid split-view panels with absolute positioned, overlapping fullscreen layers.
+- **Floating UI**: Removed all heavy solid background blocks and thick borders.
+  - HUD is now floating text blocks in the top corners.
+  - Toolbar is a frosted glass pill floating at the bottom center.
+  - Market Panel is a minimalist floating list overlay.
+- **Layer Swapping Anim**: Added smooth Framer Motion scaling and fading when toggling between the massive Factory and Network canvases.
+- **Extreme Transparency**: Adjusted the core design system in `index.css` to rely exclusively on spacing, clean fonts, and very faint glass backgrounds rather than boxes.
+- **Audio Integration Maintained**: Restored UI audio hooks (`uiClick`) to all buttons in the new `HUD.jsx` and `Toolbar.jsx`, and integrated the `AudioControls` hotkey initialization and overlay into the new `App.jsx` layout.
+
 ---
 
 ## 2026-03-21 — Basic Visual Interface (v0.1.0)
-
-### ✅ Completed
 
 #### Core Design System
 - **`src/index.css`** — Full sci-fi CSS design system

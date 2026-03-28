@@ -30,9 +30,16 @@ const useFactoryStore = create((set, get) => ({
   machines: [], // placeholder for specialized UI loops
 
   selectedTool: 'select',
+  selectedDirection: 'N', // 'N', 'E', 'S', 'W'
   tools: FACTORY_TOOLS,
 
   setSelectedTool: (toolId) => set({ selectedTool: toolId }),
+  
+  rotateSelectedDirection: () => set((state) => {
+    const dirs = ['N', 'E', 'S', 'W'];
+    const nextIdx = (dirs.indexOf(state.selectedDirection) + 1) % dirs.length;
+    return { selectedDirection: dirs[nextIdx] };
+  }),
 
   // --- Grid Actions ---
 

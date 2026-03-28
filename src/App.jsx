@@ -1,5 +1,4 @@
-// App.jsx — GRIDFLOW main game shell
-// Layout: HUD (top) → Layers (center) → Toolbar (bottom) + Side Panels
+// App.jsx — GRIDFLOW Minimal Overlapping Fullscreen Layout
 import { useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import './App.css';
@@ -13,11 +12,12 @@ import NetworkCanvas from './components/NetworkCanvas';
 import useGameStore from './store/gameStore';
 import useAudioStore from './store/audioStore';
 import soundEngine from './audio/SoundEngine';
-import { useGameLoop } from './hooks/useGameLoop';
 
 function App() {
   const activeLayer = useGameStore((s) => s.activeLayer);
   const incrementTick = useGameStore((s) => s.incrementTick);
+  const toggleLayer = useGameStore((s) => s.toggleLayer);
+
   const initAudio = useAudioStore((s) => s.initAudio);
   const audioReady = useAudioStore((s) => s.audioReady);
   const audioInitRef = useRef(false);
@@ -50,17 +50,18 @@ function App() {
     };
   }, []);
 
-  // Initialize Game Loop Web Worker Action
-  useGameLoop();
+  // Tick simulation
+  useEffect(() => {
+    const interval = setInterval(incrementTick, 1000);
+    return () => clearInterval(interval);
+  }, [incrementTick]);
 
   // Keyboard shortcut: Tab to toggle layers
-  const toggleLayer = useGameStore((s) => s.toggleLayer);
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Tab') {
       e.preventDefault();
-      toggleLayer();
-      // Play UI click on layer switch
       if (audioReady) soundEngine.play('uiClick');
+      toggleLayer();
     }
   }, [toggleLayer, audioReady]);
 
@@ -69,65 +70,42 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  const isWideScreen = typeof window !== 'undefined' && window.innerWidth > 1200;
-
   return (
-    <div className="game-shell" id="game-shell">
-      {/* ─── HUD (Top Bar) ─── */}
+    <div className="game-shell">
+      {/* ─── Floating Transparent UI Layer ─── */}
       <HUD />
-
-      {/* ─── Layer Container ─── */}
-      {isWideScreen ? (
-        /* Split View on wide screens */
-        <div className="layer-container split-view" id="layer-container">
-          <div className="layer-panel factory-layer hex-grid-bg">
-            <span className="layer-label factory">⚡ Factory</span>
-            <FactoryFloor />
-          </div>
-          <div className="layer-panel network-layer dot-grid-bg">
-            <span className="layer-label network">◉ Network</span>
-            <NetworkCanvas />
-          </div>
-        </div>
-      ) : (
-        /* Tabbed View on narrow screens */
-        <div className="layer-container" id="layer-container">
-          <AnimatePresence mode="wait">
-            {activeLayer === 'factory' ? (
-              <motion.div
-                className="layer-panel factory-layer hex-grid-bg"
-                key="factory"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.25 }}
-              >
-                <span className="layer-label factory">⚡ Factory</span>
-                <FactoryFloor />
-              </motion.div>
-            ) : (
-              <motion.div
-                className="layer-panel network-layer dot-grid-bg"
-                key="network"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-              >
-                <span className="layer-label network">◉ Network</span>
-                <NetworkCanvas />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
-
-      {/* ─── Toolbar (Bottom Bar) ─── */}
       <Toolbar />
-
-      {/* ─── Side Panels ─── */}
       <MarketPanel />
       <AudioControls />
+
+      {/* ─── Fullscreen Overlapping Game Canvases ─── */}
+      <AnimatePresence mode="wait">
+        {activeLayer === 'factory' ? (
+          <motion.div
+            key="factory-layer"
+            className="layer-container layer-factory-bg"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
+          >
+            <div className="hex-overlay"></div>
+            <FactoryFloor />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="network-layer"
+            className="layer-container layer-network-bg"
+            initial={{ opacity: 0, scale: 1.02 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
+          >
+            <div className="dot-overlay"></div>
+            <NetworkCanvas />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
